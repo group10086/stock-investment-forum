@@ -33,4 +33,4 @@
 - [ ] 模块5：上线部署与报告撰写
 
 ## 仓库地址
-https://gitee.com/zhangsan_dev/StockFundForum
+https://github.com/group10086/stock-investment-forum.git

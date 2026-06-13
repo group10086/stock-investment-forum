@@ -168,27 +168,65 @@ stock-investment-forum/
 | ✅ 模块4：AI辅助测试与调试 | 已完成 | 2026.6.10 - 2026.6.13 |
 | ⬜ 模块5：上线部署与报告撰写 | 待开始 | 2026.6.13 — |
 
+## 测试结果
+
+### 后端单元测试（33/33 ✅ 全部通过）
+
+| 模块 | 测试文件 | 用例数 | 结果 |
+|:----:|:--------|:------:|:----:|
+| 🔐 认证 | `test_auth.py` | 9 | ✅ 全部通过 |
+| 📝 帖子 | `test_post.py` | 9 | ✅ 全部通过 |
+| 💬 评论 | `test_comment.py` | 5 | ✅ 全部通过 |
+| ⚙️ 管理运营 | `test_admin.py` | 10 | ✅ 全部通过 |
+
+### 前端构建测试
+
+| 项目 | 结果 |
+|:----|:----:|
+| Vite 构建 | ✅ 成功（1666 modules，760ms） |
+| 编译错误 | ✅ 0 个 |
+| 输出文件 | ✅ 30 个（15 JS + 15 CSS） |
+| 页面路由 | ✅ 全部正常（首页/登录/注册/帖子/用户/私信/404） |
+
 ## 快速启动
 
 ### 后端启动
 ```bash
 cd backend
 pip install -r requirements.txt
-# 配置 PostgreSQL 数据库并修改 config.py 中的 DATABASE_URL
-# 执行 sql/init.sql 建表
-uvicorn app.main:app --reload --port 8000
+
+# 方式一：完整模式（需要 PostgreSQL）
+# 1. 安装并启动 PostgreSQL
+# 2. 执行 sql/init.sql 建表
+# 3. （可选）执行 sql/sample_data.sql 导入测试数据
+# 4. 修改 app/config.py 中的 DATABASE_URL
+python -m uvicorn app.main:app --reload --port 8000
+
+# 方式二：无数据库模式（API正常注册，但接口调用返回500）
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 ### 前端启动
 ```bash
 cd frontend
-npm install
-npm run dev
+npm install        # Windows下如遇权限问题用 npm.cmd install
+npm run dev        # 启动开发服务器，默认 :5173
+npm run build      # 生产构建
 ```
 
-### 访问地址
-- 前端页面：http://localhost:5173
-- API文档：http://localhost:8000/api/docs
+### 验证访问
+
+| 地址 | 说明 |
+|:----|:------|
+| **http://localhost:5173** | 前端页面（自动代理 API 到 :8000） |
+| **http://localhost:8000/api/docs** | Swagger API 文档 |
+| **http://localhost:8000/api/health** | 后端健康检查 |
+
+### 注意事项
+
+- ⚡ 前端**无需后端**也可启动查看 UI 布局，未登录状态下可浏览首页、登录/注册页等
+- 🐘 后端无 PostgreSQL 时也能启动，API 路由正常注册，仅涉及数据库的操作会返回 500
+- 🔄 前后端联调时 Vite 开发服务器会自动将 `/api` 请求代理到后端 `:8000`
 
 ## 仓库地址
 https://github.com/group10086/stock-investment-forum.git

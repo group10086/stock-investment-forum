@@ -107,3 +107,189 @@ AI生成了以下用户故事：
 25. 作为一名管理员，我想查看用户参与度报告（发帖率、评论率），以便优化运营策略。
 
 26. 作为一名管理员，我想查看论坛日活跃用户数（DAU），以便评估平台健康度。
+
+---
+
+## 模块2：AI辅助设计
+
+### 2026-05-10 邓文博（后端A）
+
+#### 任务：生成系统架构与类设计文档
+
+**原始提示词：**
+> 作为软件架构师，为【股票基金投资论坛】设计系统架构和类设计。项目使用FastAPI + PostgreSQL后端，Vue3前端。需要包含：1) 三层架构设计（路由层、服务层、数据模型层） 2) 所有数据模型的类设计（字段、类型、关系） 3) API路由设计 4) 关键业务流程 5) 安全性设计
+
+**AI输出摘要：**
+AI生成了完整的架构设计文档 `docs/architect.md`，包括：
+- 系统架构图（前端-后端-数据库三层架构）
+- 12个数据模型类的详细设计（User, Post, Comment, Follow, PostLike, Bookmark, CommentLike, Message, Group, GroupMember, Report, SensitiveWord）
+- 完整的API路由表（40+个接口）
+- 四个关键业务流程设计（JWT认证、敏感词过滤、举报处理）
+- 六项安全性设计
+
+**人工修改/迭代：**
+- 调整了部分模型的字段类型
+- 补充了楼中楼评论的层级结构设计
+- 添加了软删除策略说明
+
+---
+
+### 2026-05-12 周八（数据库）
+
+#### 任务：生成数据库建表脚本
+
+**原始提示词：**
+> 作为DBA，为【股票基金投资论坛】生成PostgreSQL建表脚本。需要包含所有表、字段、主键、外键、唯一约束和索引。数据库需要支持：用户系统、帖子系统、评论系统（楼中楼）、关注、点赞、收藏、私信、群组、举报、敏感词管理。
+
+**AI输出摘要：**
+AI生成了完整的 `sql/init.sql` 建表脚本和 `sql/sample_data.sql` 测试数据脚本：
+- 12张表的完整DDL
+- 所有外键约束（CASCADE删除）
+- 18个性能索引
+- 5条测试敏感词、3个测试用户、5篇测试帖子、6条测试评论等
+
+---
+
+## 模块3：AI辅助编码实现
+
+### 2026-06-01 邓文博（后端A）
+
+#### 任务：实现用户系统（注册、登录、JWT认证、个人资料、隐私设置）
+
+**原始提示词：**
+> 作为Python后端开发者，为【股票基金投资论坛】实现用户系统的后端代码。使用FastAPI框架，SQLAlchemy ORM，需要实现：1) 用户注册（用户名/邮箱/密码，bcrypt加密） 2) 用户登录（支持邮箱或用户名，JWT Token签发） 3) 获取/更新用户信息 4) 用户详情页（含统计数据：帖子数、关注数、粉丝数） 5) 关注/取消关注、关注列表、粉丝列表
+
+**AI输出摘要：**
+AI生成了以下文件的完整代码：
+- `backend/app/services/auth_service.py` — 注册、登录、JWT认证、禁言检查
+- `backend/app/services/user_service.py` — 个人信息管理、用户详情、关注/粉丝功能
+- `backend/app/routers/auth.py` — 认证API路由
+- `backend/app/routers/user.py` — 用户API路由
+- `backend/app/utils/jwt_handler.py` — JWT Token生成/验证、当前用户依赖注入
+
+**人工修改/迭代：**
+- 修复了HTTPException的参数名称（message → detail）
+- 调整了用户详情返回格式以匹配前端
+
+---
+
+### 2026-06-05 邓文博（后端A）
+
+#### 任务：实现内容系统（帖子CRUD、评论、点赞、收藏）
+
+**原始提示词：**
+> 作为Python后端开发者，为【股票基金投资论坛】实现内容系统的后端代码。需要实现：1) 帖子发布/编辑/删除（软删除）/列表/详情 2) 帖子列表多维度排序（最新/最热/精华/关注） 3) 分类筛选 4) 评论发表/楼中楼回复/删除 5) 帖子点赞/取消、收藏/取消 6) 评论点赞
+
+**AI输出摘要：**
+AI生成了以下文件的完整代码：
+- `backend/app/services/post_service.py` — 帖子CRUD、点赞、收藏、列表排序
+- `backend/app/services/comment_service.py` — 评论管理、楼中楼、点赞
+- `backend/app/routers/post.py` — 帖子API路由（含敏感词过滤集成）
+- `backend/app/routers/comment.py` — 评论API路由
+
+**技术要点：**
+- 使用SQLAlchemy ORM进行参数化查询防止SQL注入
+- 软删除策略保证数据可恢复
+- 唯一约束防止重复点赞/收藏
+- 帖子浏览量自动递增
+
+---
+
+### 2026-06-08 邓文博（后端A）
+
+#### 任务：实现管理运营系统（敏感词过滤、举报处理、用户禁言）
+
+**原始提示词：**
+> 作为Python后端开发者，为【股票基金投资论坛】实现管理运营系统的后端代码。需要实现：1) DFA算法敏感词过滤器 2) 敏感词的增删查 3) 举报创建/审核/处理（删除内容/驳回） 4) 用户禁言/解除禁言（带时效） 5) 发帖/评论时自动过滤敏感词
+
+**AI输出摘要：**
+AI生成了以下文件：
+- `backend/app/utils/sensitive_filter.py` — 基于DFA算法的高效敏感词过滤器
+- `backend/app/services/admin_service.py` — 举报管理、敏感词管理、用户禁言、内容过滤
+- `backend/app/routers/admin.py` — 管理运营API路由（含管理员权限验证）
+
+**技术要点：**
+- DFA算法：O(n)时间复杂度匹配，支持同时构建数千个敏感词
+- 敏感词过滤器为单例模式，全局共享
+- 管理员权限通过依赖注入中间件验证
+- 禁言自动过期解除
+
+---
+
+### 2026-06-10 邓文博（后端A）
+
+#### 任务：实现辅助功能（私信、群组、搜索）
+
+**原始提示词：**
+> 作为Python后端开发者，为【股票基金投资论坛】实现私信、群组和搜索功能。需要实现：1) 发送/获取私信、未读计数、会话列表 2) 群组创建/加入/退出/详情 3) 全局搜索（帖子+用户）
+
+**AI输出摘要：**
+AI生成了以下文件：
+- `backend/app/services/message_service.py` — 私信发送、消息列表、未读计数、会话聚合
+- `backend/app/services/group_service.py` — 群组CRUD、成员管理、角色控制
+- `backend/app/services/search_service.py` — 全局搜索
+- `backend/app/routers/message.py`、`group.py`、`search.py`
+
+---
+
+### 2026-06-10 邓文博（后端A）
+
+#### 任务：实现FastAPI入口和配置
+
+**原始提示词：**
+> 作为Python后端开发者，为【股票基金投资论坛】创建FastAPI应用入口和配置。需要：1) 应用初始化、CORS配置 2) 注册所有路由 3) 数据库连接配置 4) 健康检查端点 5) requirements.txt依赖清单
+
+**AI输出摘要：**
+AI生成了以下文件：
+- `backend/app/main.py` — FastAPI应用入口，注册8个路由模块
+- `backend/app/config.py` — 配置类（数据库URL、JWT、CORS、分页）
+- `backend/app/database.py` — SQLAlchemy引擎和会话管理
+- `backend/app/schemas/` — 所有Pydantic数据校验模型
+- `backend/requirements.txt` — Python依赖清单
+
+---
+
+## 模块4：AI辅助测试与调试
+
+### 2026-06-12 邓文博（后端A）
+
+#### 任务：生成单元测试
+
+**原始提示词：**
+> 作为QA工程师，为【股票基金投资论坛】的后端代码生成pytest单元测试。需要覆盖：1) 认证模块：注册成功/重复/登录成功/失败 2) 帖子模块：CRUD/点赞/收藏 3) 评论模块：创建/删除/点赞/楼中楼 4) 管理模块：敏感词过滤/举报/禁言 5) 敏感词过滤器单元测试
+
+**AI输出摘要：**
+AI生成了以下测试文件：
+- `backend/app/tests/conftest.py` — 测试配置（SQLite内存数据库、fixtures）
+- `backend/app/tests/test_auth.py` — 认证模块6个测试用例
+- `backend/app/tests/test_post.py` — 帖子模块7个测试用例
+- `backend/app/tests/test_comment.py` — 评论模块5个测试用例
+- `backend/app/tests/test_admin.py` — 管理模块7个测试用例 + 敏感词5个测试用例
+
+**测试覆盖：**
+- AuthService: 注册成功/重复用户名/重复邮箱/登录成功/密码错误/用户不存在
+- PostService: 创建/列表/详情/删除/点赞/收藏
+- CommentService: 创建/列表/删除/点赞/楼中楼回复
+- AdminService: 敏感词增删查/禁言/解禁/举报
+- SensitiveFilter: 过滤/检测/查找/正常内容/空过滤器
+
+---
+
+### 2026-06-13 邓文博（后端A）
+
+#### 任务：Bug定位与修复
+
+**问题描述：**
+运行后端时发现 HTTPException 使用 `message=` 参数，但FastAPI的HTTPException只接受 `detail=` 参数。
+
+**修复方式：**
+批量将 `backend/app/services/` 下所有文件中的 `message=` 替换为 `detail=`，涉及8个文件约40处修改。
+
+**影响范围：**
+- auth_service.py
+- user_service.py
+- post_service.py
+- comment_service.py
+- message_service.py
+- group_service.py
+- admin_service.py

@@ -2,7 +2,7 @@
 
 ## 模块1：需求分析
 
-### 2026-05-07 邓文博（后端）
+### 2026-05-07 邓文博（后端A）
 
 #### 任务：生成用户注册相关用户故事
 
@@ -277,7 +277,7 @@ AI生成了以下测试文件：
 
 ### 2026-06-13 邓文博（后端A）
 
-#### 任务：Bug定位与修复
+#### 任务①：Bug定位与修复 — HTTPException参数错误
 
 **问题描述：**
 运行后端时发现 HTTPException 使用 `message=` 参数，但FastAPI的HTTPException只接受 `detail=` 参数。
@@ -293,3 +293,51 @@ AI生成了以下测试文件：
 - message_service.py
 - group_service.py
 - admin_service.py
+
+---
+
+### 2026-06-13 邓文博（后端A）
+
+#### 任务②：Bug定位与修复 — 编码损坏(中文字符被替换为U+FFFD)
+
+**问题描述：**
+修复HTTPException参数时使用PowerShell的`-replace`操作，导致所有服务文件中的中文字符被破坏。中文多字节UTF-8字符的末尾字节丢失，被替换为U+FFFD（替换字符），导致约40处SyntaxError。
+
+**损坏模式：**
+- 字符串结尾引号丢失：`detail="帖子不存在")` → `detail="帖子不存在?)`（`"`变成`?`）
+- 文档字符串损坏：`"""删除评论（软删除）"""` → `"""删除评论（软删除?""`
+- 注释损坏：`# 增加浏览量` → `# 增加浏览�?`
+
+**修复方式：**
+编写Python修复脚本(`fix_all4.py`)，精确扫描所有服务文件中包含U+FFFD的行，根据语境推断原始字符并修复。经过多次迭代修复后，所有文件语法检查通过。
+
+**涉及文件：**
+- auth_service.py、user_service.py、post_service.py、comment_service.py
+- message_service.py、group_service.py、admin_service.py
+
+---
+
+### 2026-06-13 邓文博（后端A）
+
+#### 任务③：测试环境配置与调试验证
+
+**问题描述：**
+编码修复后运行pytest，发现两个问题：
+1. 导入`main.py`时触发`Base.metadata.create_all()`尝试连接PostgreSQL失败
+2. 匿名访问API端点返回403(HTTPBearer默认要求认证)
+3. DFA敏感词过滤器测试断言错误(`***`应为`**`)
+
+**修复方式：**
+1. `main.py`：`create_all`添加`try-except`保护，允许无数据库时导入
+2. `jwt_handler.py`：`HTTPBearer()`添加`auto_error=False`，允许匿名访问
+3. `test_admin.py`：修正断言`***`→`**`（DFA单字符替换）
+4. `routers/post.py`、`admin.py`：`regex=`改为`pattern=`（废弃警告）
+
+**最终测试结果：33/33 ✅ 全部通过**
+
+| 测试模块 | 测试文件 | 用例数 | 状态 |
+|:--------:|:--------|:------:|:----:|
+| 🔐 认证 | test_auth.py | 9 | ✅ 全部通过 |
+| 📝 帖子 | test_post.py | 9 | ✅ 全部通过 |
+| 💬 评论 | test_comment.py | 5 | ✅ 全部通过 |
+| ⚙️ 管理运营 | test_admin.py | 10 | ✅ 全部通过 |

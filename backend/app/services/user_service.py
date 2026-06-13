@@ -18,7 +18,7 @@ class UserService:
         """获取当前用户信息"""
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="用户不存�?)
+            raise HTTPException(status_code=404, detail="用户不存在")
         return user
 
     @staticmethod
@@ -26,7 +26,7 @@ class UserService:
         """更新用户信息"""
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="用户不存�?)
+            raise HTTPException(status_code=404, detail="用户不存在")
 
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
@@ -38,10 +38,10 @@ class UserService:
 
     @staticmethod
     def get_user_detail(db: Session, user_id: int, current_user_id: int = None) -> dict:
-        """获取用户详情页信�?""
+        """获取用户详情页信息"""
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="用户不存�?)
+            raise HTTPException(status_code=404, detail="用户不存在")
 
         # 统计数据
         post_count = db.query(Post).filter(
@@ -54,7 +54,7 @@ class UserService:
             Follow.followed_id == user_id
         ).count()
 
-        # 是否已关�?
+        # 是否已关注
         is_following = False
         if current_user_id and current_user_id != user_id:
             is_following = db.query(Follow).filter(
@@ -88,7 +88,7 @@ class UserService:
 
         user = db.query(User).filter(User.id == followed_id).first()
         if not user:
-            raise HTTPException(status_code=404, detail="用户不存�?)
+            raise HTTPException(status_code=404, detail="用户不存在")
 
         existing = db.query(Follow).filter(
             Follow.follower_id == follower_id,
@@ -111,7 +111,7 @@ class UserService:
         ).first()
 
         if not follow:
-            raise HTTPException(status_code=400, detail="尚未关注该用�?)
+            raise HTTPException(status_code=400, detail="尚未关注该用户")
 
         db.delete(follow)
         db.commit()

@@ -30,11 +30,11 @@ class PostService:
 
         query = db.query(Post).filter(Post.is_deleted == False)
 
-        # 筛选分�?
+        # 筛选分类?
         if category:
             query = query.filter(Post.category == category)
 
-        # 筛选用�?
+        # 筛选用户?
         if user_id:
             query = query.filter(Post.user_id == user_id)
 
@@ -48,7 +48,7 @@ class PostService:
         elif sort == "following":
             if not current_user_id:
                 return {"list": [], "total": 0, "page": page, "page_size": page_size, "has_more": False}
-            # 获取关注用户的帖�?
+            # 获取关注用户的帖子?
             following_ids = db.query(Follow.followed_id).filter(
                 Follow.follower_id == current_user_id
             ).subquery()
@@ -76,9 +76,9 @@ class PostService:
         """获取帖子详情"""
         post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
         if not post:
-            raise HTTPException(status_code=404, detail="帖子不存�?)
+            raise HTTPException(status_code=404, detail="帖子不存在")
 
-        # 增加浏览�?
+        # 增加浏览量
         post.view_count += 1
         db.commit()
 
@@ -106,7 +106,7 @@ class PostService:
         """更新帖子"""
         post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
         if not post:
-            raise HTTPException(status_code=404, detail="帖子不存�?)
+            raise HTTPException(status_code=404, detail="帖子不存在")
         if post.user_id != user_id:
             raise HTTPException(status_code=403, detail="无权修改他人帖子")
 
@@ -120,10 +120,10 @@ class PostService:
 
     @staticmethod
     def delete_post(db: Session, post_id: int, user_id: int):
-        """删除帖子（软删除�?""
+        """删除帖子（软删除）"""
         post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
         if not post:
-            raise HTTPException(status_code=404, detail="帖子不存�?)
+            raise HTTPException(status_code=404, detail="帖子不存在")
         if post.user_id != user_id:
             raise HTTPException(status_code=403, detail="无权删除他人帖子")
 
@@ -135,7 +135,7 @@ class PostService:
         """点赞帖子"""
         post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
         if not post:
-            raise HTTPException(status_code=404, detail="帖子不存�?)
+            raise HTTPException(status_code=404, detail="帖子不存在")
 
         existing = db.query(PostLike).filter(
             PostLike.user_id == user_id,
@@ -172,7 +172,7 @@ class PostService:
         """收藏帖子"""
         post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == False).first()
         if not post:
-            raise HTTPException(status_code=404, detail="帖子不存�?)
+            raise HTTPException(status_code=404, detail="帖子不存在")
 
         existing = db.query(Bookmark).filter(
             Bookmark.user_id == user_id,
@@ -206,7 +206,7 @@ class PostService:
 
     @staticmethod
     def get_user_bookmarks(db: Session, user_id: int, page: int = 1, page_size: int = 10) -> dict:
-        """获取用户收藏的帖�?""
+        """获取用户收藏的帖子"""
         from app.utils.pagination import paginate
 
         query = db.query(Post).join(
@@ -226,7 +226,7 @@ class PostService:
 
     @staticmethod
     def _post_to_dict(post, db: Session, current_user_id: int = None, detail: bool = False) -> dict:
-        """将帖子对象转为字�?""
+        """将帖子对象转为字典"""
         user = db.query(User).filter(User.id == post.user_id).first()
 
         is_liked = False

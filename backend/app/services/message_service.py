@@ -14,8 +14,8 @@ class MessageService:
 
     @staticmethod
     def send_message(db: Session, sender_id: int, data: MessageCreate) -> Message:
-        """发送私�?""
-        # 验证接收者存�?
+        """发送私信"""
+        # 验证接收者存在"
         receiver = db.query(User).filter(User.id == data.receiver_id).first()
         if not receiver:
             raise HTTPException(status_code=404, detail="接收者不存在")
@@ -23,7 +23,7 @@ class MessageService:
         if sender_id == data.receiver_id:
             raise HTTPException(status_code=400, detail="不能给自己发私信")
 
-        # 检查接收者是否允许私�?
+        # 检查接收者是否允许私信?
         if not receiver.allow_messages:
             raise HTTPException(status_code=403, detail="该用户不允许接收私信")
 
@@ -39,7 +39,7 @@ class MessageService:
 
     @staticmethod
     def get_messages(db: Session, user_id: int, other_user_id: int, page: int = 1, page_size: int = 50) -> dict:
-        """获取与某用户的私信列�?""
+        """获取与某用户的私信列表"""
         from app.utils.pagination import paginate
 
         query = db.query(Message).filter(
@@ -51,7 +51,7 @@ class MessageService:
 
         items, total, has_more = paginate(query, page, page_size)
 
-        # 标记为已�?
+        # 标记为已读?
         unread = db.query(Message).filter(
             Message.receiver_id == user_id,
             Message.sender_id == other_user_id,
@@ -83,7 +83,7 @@ class MessageService:
 
     @staticmethod
     def get_unread_count(db: Session, user_id: int) -> int:
-        """获取未读消息�?""
+        """获取未读消息数"""
         return db.query(Message).filter(
             Message.receiver_id == user_id,
             Message.is_read == False
@@ -92,7 +92,7 @@ class MessageService:
     @staticmethod
     def get_conversations(db: Session, user_id: int) -> list:
         """获取会话列表"""
-        # 找出所有有消息交流的用�?
+        # 找出所有有消息交流的用户?
         from sqlalchemy import func, text
 
         subquery = db.query(

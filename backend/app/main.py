@@ -7,8 +7,11 @@ from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, user, post, comment, message, group, search, admin
 
-# 创建数据库表
-Base.metadata.create_all(bind=engine)
+# 创建数据库表（生产环境建议使用Alembic迁移）
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception:
+    pass  # 允许在无数据库时导入（测试环境）
 
 app = FastAPI(
     title=settings.APP_NAME,

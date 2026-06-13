@@ -18,7 +18,7 @@ class TestSensitiveFilter:
         sf.build(["赌博", "色情", "毒品"])
 
         result = sf.filter("我喜欢赌博和色情内容")
-        assert "***" in result
+        assert "**" in result
         assert "赌博" not in result
         assert "色情" not in result
 

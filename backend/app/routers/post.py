@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/posts", tags=["帖子"])
 def get_post_list(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
-    sort: str = Query("newest", regex="^(newest|hot|essence|following)$"),
+    sort: str = Query("newest", pattern="^(newest|hot|essence|following)$"),
     category: str = Query(None),
     user_id: int = Query(None),
     current_user: User = Depends(get_optional_user),

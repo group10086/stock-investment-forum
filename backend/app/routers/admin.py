@@ -22,7 +22,7 @@ def require_admin(current_user: User = Depends(get_current_user)):
 
 @router.get("/reports")
 def get_reports(
-    status: str = Query(None, regex="^(pending|resolved|dismissed)$"),
+    status: str = Query(None, pattern="^(pending|resolved|dismissed)$"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     admin: User = Depends(require_admin),
@@ -36,7 +36,7 @@ def get_reports(
 @router.put("/reports/{report_id}")
 def handle_report(
     report_id: int,
-    action: str = Query(..., regex="^(resolve|dismiss|delete)$"),
+    action: str = Query(..., pattern="^(resolve|dismiss|delete)$"),
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):

@@ -63,7 +63,7 @@ class GroupService:
         """获取群组详情"""
         group = db.query(Group).filter(Group.id == group_id).first()
         if not group:
-            raise HTTPException(status_code=404, detail="群组不存�?)
+            raise HTTPException(status_code=404, detail="群组不存在")
 
         owner = db.query(User).filter(User.id == group.owner_id).first()
         members = db.query(GroupMember, User).join(
@@ -110,7 +110,7 @@ class GroupService:
         """加入群组"""
         group = db.query(Group).filter(Group.id == group_id).first()
         if not group:
-            raise HTTPException(status_code=404, detail="群组不存�?)
+            raise HTTPException(status_code=404, detail="群组不存在")
 
         if not group.is_public:
             raise HTTPException(status_code=403, detail="该群组为私密群组")
@@ -121,7 +121,7 @@ class GroupService:
         ).first()
 
         if existing:
-            raise HTTPException(status_code=400, detail="已经是群组成�?)
+            raise HTTPException(status_code=400, detail="已经是群组成员")
 
         member = GroupMember(group_id=group_id, user_id=user_id)
         db.add(member)
@@ -129,7 +129,7 @@ class GroupService:
 
     @staticmethod
     def leave_group(db: Session, group_id: int, user_id: int):
-        """退出群�?""
+        """退出群组"""
         member = db.query(GroupMember).filter(
             GroupMember.group_id == group_id,
             GroupMember.user_id == user_id

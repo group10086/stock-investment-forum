@@ -31,14 +31,21 @@
       </el-form-item>
 
       <el-form-item label="内容" prop="content">
-        <el-input
-          v-model="formData.content"
-          type="textarea"
-          :rows="12"
-          placeholder="分享你的投资观点和分析..."
-          maxlength="10000"
-          show-word-limit
-        />
+        <div style="border: 1px solid #DCDFE6; border-radius: 4px;">
+          <Toolbar
+            style="border-bottom: 1px solid #DCDFE6;"
+            :editor="editorRef"
+            :defaultConfig="toolbarConfig"
+            mode="default"
+          />
+          <Editor
+            style="height: 400px; overflow-y: hidden;"
+            v-model="formData.content"
+            :defaultConfig="editorConfig"
+            mode="default"
+            @onCreated="handleCreated"
+          />
+        </div>
       </el-form-item>
 
       <el-form-item label="标签（可选）">
@@ -59,10 +66,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, shallowRef, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { postApi } from '@/api'
 import { ElMessage } from 'element-plus'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -70,6 +79,7 @@ const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
+const editorRef = shallowRef()
 
 const formData = reactive({
   title: '',
@@ -78,6 +88,23 @@ const formData = reactive({
   tags: ''
 })
 
+const toolbarConfig = {}
+const editorConfig = {
+  placeholder: '分享你的投资观点和分析...',
+  MENU_CONF: {
+    uploadImage: {
+      server: '/api/upload/image',
+      fieldName: 'file',
+      maxFileSize: 5 * 1024 * 1024,
+      allowedFileTypes: ['image/*']
+    }
+  }
+}
+
+const handleCreated = (editor) => {
+  editorRef.value = editor
+}
+
 const rules = {
   title: [
     { required: true, message: '请输入帖子标题', trigger: 'blur' },
@@ -85,7 +112,16 @@ const rules = {
   ],
   content: [
     { required: true, message: '请输入帖子内容', trigger: 'blur' },
-    { min: 10, message: '内容至少10个字符', trigger: 'blur' }
+    { 
+      validator: (rule, value, callback) => {
+        if (!value || value === '<p><br></p>') {
+          callback(new Error('内容不能为空'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   category: [
     { required: true, message: '请选择板块', trigger: 'change' }
@@ -133,6 +169,12 @@ const handleUpdate = async () => {
 
 onMounted(() => {
   loadPost()
+})
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
 })
 </script>
 

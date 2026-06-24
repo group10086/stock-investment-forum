@@ -11,13 +11,38 @@
 
         <!-- 搜索框 -->
         <div class="search-box">
-          <el-input
+          <el-autocomplete
             v-model="searchKeyword"
+            :fetch-suggestions="querySearch"
             placeholder="搜索帖子、用户、股票代码..."
             :prefix-icon="Search"
             clearable
             @keyup.enter="handleSearch"
-          />
+            @select="handleSelect"
+            popper-class="search-suggestions"
+          >
+            <template #default="{ item }">
+              <div class="suggestion-item">
+                <el-icon><component :is="item.icon" /></el-icon>
+                <span>{{ item.value }}</span>
+                <el-tag size="small" type="info">{{ item.type }}</el-tag>
+              </div>
+            </template>
+          </el-autocomplete>
+          
+          <!-- 热门搜索 -->
+          <div v-if="!searchKeyword && showHotSearch" class="hot-search">
+            <span class="hot-label">热搜：</span>
+            <el-tag
+              v-for="(tag, index) in hotSearchTags"
+              :key="index"
+              size="small"
+              @click="searchKeyword = tag"
+              style="cursor: pointer; margin-right: 4px;"
+            >
+              {{ tag }}
+            </el-tag>
+          </div>
         </div>
 
         <!-- 右侧操作区 -->
@@ -184,6 +209,17 @@ const unreadCount = ref(3)
 const hotTopics = ref([
   'A股', '港股', '美股', '基金定投', '价值投资', '技术分析', '财报分析'
 ])
+// 搜索建议数据（模拟）
+const searchSuggestions = ref([
+  { value: '阿里巴巴', type: '股票', icon: 'TrendCharts' },
+  { value: '阿里云', type: '概念', icon: 'DataAnalysis' },
+  { value: '阿里健康', type: '股票', icon: 'TrendCharts' },
+  { value: '巴菲特', type: '用户', icon: 'UserFilled' },
+  { value: '价值投资策略', type: '帖子', icon: 'Document' },
+  { value: '贵州茅台', type: '股票', icon: 'TrendCharts' },
+  { value: '腾讯控股', type: '股票', icon: 'TrendCharts' },
+  { value: '新能源基金', type: '基金', icon: 'StarFilled' }
+])
 
 const recommendedUsers = ref([
   { id: 1, nickname: '投资达人', bio: '10年投资经验', avatar: '' },
@@ -200,6 +236,31 @@ const handleSearch = () => {
   if (!searchKeyword.value.trim()) return
   ElMessage.info(`搜索: ${searchKeyword.value}`)
   // TODO: 跳转到搜索结果页
+}
+
+// 搜索联想 - 防抖处理
+let searchTimer = null
+const querySearch = (queryString, cb) => {
+  clearTimeout(searchTimer)
+  
+  searchTimer = setTimeout(() => {
+    if (!queryString) {
+      cb([])
+      return
+    }
+    
+    const keyword = queryString.toLowerCase()
+    const results = searchSuggestions.value.filter(item => 
+      item.value.toLowerCase().includes(keyword)
+    )
+    
+    cb(results)
+  }, 300)
+}
+
+const handleSelect = (item) => {
+  searchKeyword.value = item.value
+  handleSearch()
 }
 
 const handleUserMenu = (command) => {
@@ -284,6 +345,36 @@ const handleUserMenu = (command) => {
   border-radius: 4px;
 }
 
+.search-box {
+  flex: 1;
+  max-width: 500px;
+  position: relative;
+}
+
+.hot-search {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hot-label {
+  margin-right: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.suggestion-item .el-icon {
+  color: var(--primary-color);
+}
+
+.suggestion-item span {
+  flex: 1;
+}
 .user-info:hover {
   background: var(--primary-light);
 }

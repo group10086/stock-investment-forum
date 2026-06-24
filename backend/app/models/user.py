@@ -23,5 +23,7 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     is_muted = Column(Boolean, default=False)
     muted_until = Column(DateTime, nullable=True)
+    score = Column(Integer, default=0)
+    level = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

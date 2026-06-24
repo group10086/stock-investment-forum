@@ -99,6 +99,10 @@ class PostService:
         db.add(post)
         db.commit()
         db.refresh(post)
+
+        # 发帖奖励积分
+        from app.services.admin_service import AdminService
+        AdminService.add_score(db, user_id, 5, "发布帖子")
         return post
 
     @staticmethod

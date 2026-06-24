@@ -40,6 +40,10 @@ class AuthService:
         db.commit()
         db.refresh(user)
 
+        # 注册奖励积分
+        from app.services.admin_service import AdminService
+        AdminService.add_score(db, user.id, 10, "注册奖励")
+
         # 生成token
         token = create_access_token({"user_id": user.id})
 

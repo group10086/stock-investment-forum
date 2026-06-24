@@ -103,3 +103,28 @@ def delete_sensitive_word(
     """删除敏感词（管理员）"""
     AdminService.delete_sensitive_word(db, word_id)
     return {"message": "删除成功"}
+
+
+# ========== 数据分析 ==========
+
+@router.get("/analytics")
+def get_analytics(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """获取论坛统计数据（管理员）"""
+    result = AdminService.get_analytics(db)
+    return {"data": result}
+
+
+# ========== 重复内容检测 ==========
+
+@router.get("/duplicate-check")
+def check_duplicate(
+    content: str = Query(..., min_length=10),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """检测重复内容（管理员）"""
+    result = AdminService.detect_duplicate(db, content)
+    return {"data": result}

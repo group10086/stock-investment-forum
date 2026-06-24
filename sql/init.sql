@@ -148,6 +148,32 @@ CREATE TABLE IF NOT EXISTS sensitive_words (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 星标关注表
+CREATE TABLE IF NOT EXISTS star_follows (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    starred_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, starred_user_id)
+);
+
+-- 附件表
+CREATE TABLE IF NOT EXISTS attachments (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    target_type VARCHAR(20) NOT NULL,
+    target_id INTEGER NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    filepath VARCHAR(500) NOT NULL,
+    filesize BIGINT DEFAULT 0,
+    filetype VARCHAR(50) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 用户表追加字段（积分等级）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS score INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 0;
+
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);

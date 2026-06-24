@@ -178,3 +178,114 @@ class AdminService:
         if not sensitive_filter._initialized:
             return False
         return sensitive_filter.contains_sensitive(content)
+
+    # ========== 重复内容检测 ==========
+
+    @staticmethod
+    def detect_duplicate(db: Session, content: str, threshold: float = 0.6) -> list:
+        """检测相似内容（基于简单文本相似度）"""
+        if len(content) < 20:
+            return []
+        # 取前50字做精确匹配
+        prefix = content[:50]
+        recent = db.query(Post).filter(
+            Post.is_deleted == False,
+            Post.content.ilike(f"{prefix}%")
+        ).limit(5).all()
+        return [{"id": p.id, "title": p.title, "created_at": p.created_at.isoformat()} for p in recent]
+
+    # ========== 积分与等级系统 ==========
+
+    @staticmethod
+    def add_score(db: Session, user_id: int, points: int, reason: str = "") -> dict:
+        """增加用户积分"""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"score": 0, "level": 0}
+
+        current_score = getattr(user, 'score', 0) or 0
+        current_score += points
+        user.score = current_score
+
+        # 计算等级：每100分升1级，最高50级
+        level = min(current_score // 100, 50)
+        user.level = level
+
+        db.commit()
+        return {"score": current_score, "level": level}
+
+    @staticmethod
+    def get_user_rank(db: Session, user_id: int) -> dict:
+        """获取用户积分与等级"""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"score": 0, "level": 0, "title": "新手上路"}
+        score = getattr(user, 'score', 0) or 0
+        level = getattr(user, 'level', 0) or 0
+        titles = {0: "新手上路", 5: "财经达人", 10: "投资高手", 20: "股海老手", 30: "传奇投资者", 50: "论坛至尊"}
+        title = "新手上路"
+        for lv, t in sorted(titles.items(), reverse=True):
+            if level >= lv:
+                title = t
+                break
+        return {"score": score, "level": level, "title": title}
+
+    # ========== 数据分析（管理员） ==========
+
+    @staticmethod
+    def get_analytics(db: Session) -> dict:
+        """获取论坛统计数据"""
+        from sqlalchemy import func
+        total_users = db.query(User).count()
+        total_posts = db.query(Post).filter(Post.is_deleted == False).count()
+        total_comments = db.query(Comment).filter(Comment.is_deleted == False).count()
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_posts = db.query(Post).filter(
+            Post.is_deleted == False, Post.created_at >= today
+        ).count()
+        today_comments = db.query(Comment).filter(
+            Comment.is_deleted == False, Comment.created_at >= today
+        ).count()
+        today_active = db.query(User.id).filter(
+            User.id.in_(
+                db.query(Post.user_id).filter(Post.created_at >= today).distinct().union(
+                    db.query(Comment.user_id).filter(Comment.created_at >= today).distinct()
+                )
+            )
+        ).count()
+
+        return {
+            "total_users": total_users,
+            "total_posts": total_posts,
+            "total_comments": total_comments,
+            "today_posts": today_posts,
+            "today_comments": today_comments,
+            "today_active_users": today_active,
+            "dau": today_active,
+        }
+
+    # ========== 成就系统 ==========
+
+    @staticmethod
+    def get_achievements(db: Session, user_id: int) -> dict:
+        """获取用户成就"""
+        post_count = db.query(Post).filter(Post.user_id == user_id, Post.is_deleted == False).count()
+        comment_count = db.query(Comment).filter(Comment.user_id == user_id, Comment.is_deleted == False).count()
+        from app.models.post_like import PostLike
+        like_received = db.query(PostLike).join(Post).filter(Post.user_id == user_id).count()
+
+        achievements = []
+        if post_count >= 1:
+            achievements.append({"name": "初来乍到", "desc": "发布第一篇帖子", "icon": "📝"})
+        if post_count >= 10:
+            achievements.append({"name": "笔耕不辍", "desc": "发布10篇帖子", "icon": "✍️"})
+        if post_count >= 50:
+            achievements.append({"name": "高产作者", "desc": "发布50篇帖子", "icon": "🏆"})
+        if comment_count >= 10:
+            achievements.append({"name": "热心评论", "desc": "发表10条评论", "icon": "💬"})
+        if comment_count >= 100:
+            achievements.append({"name": "评论达人", "desc": "发表100条评论", "icon": "🎯"})
+        if like_received >= 10:
+            achievements.append({"name": "人气之星", "desc": "获得10个赞", "icon": "⭐"})
+
+        return {"post_count": post_count, "comment_count": comment_count, "like_received": like_received, "achievements": achievements}

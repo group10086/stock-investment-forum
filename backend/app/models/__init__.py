@@ -9,9 +9,12 @@ from app.models.message import Message
 from app.models.group import Group, GroupMember
 from app.models.report import Report
 from app.models.sensitive_word import SensitiveWord
+from app.models.star_follow import StarFollow
+from app.models.attachment import Attachment
 
 __all__ = [
     "User", "Post", "Comment", "Follow", "PostLike",
     "Bookmark", "CommentLike", "Message", "Group",
-    "GroupMember", "Report", "SensitiveWord"
+    "GroupMember", "Report", "SensitiveWord",
+    "StarFollow", "Attachment"
 ]

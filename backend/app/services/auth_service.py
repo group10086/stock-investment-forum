@@ -9,6 +9,11 @@ from app.schemas.user import UserCreate, UserLogin
 from app.utils.jwt_handler import create_access_token
 
 
+def _hash_password(password: str) -> str:
+    """安全地哈希密码，截断到72字节（bcrypt限制）"""
+    return bcrypt.hash(password[:72])
+
+
 class AuthService:
     """用户认证服务"""
 
@@ -33,7 +38,7 @@ class AuthService:
         user = User(
             username=user_data.username,
             email=user_data.email,
-            password_hash=bcrypt.hash(user_data.password),
+            password_hash=_hash_password(user_data.password),
             nickname=user_data.username,
         )
         db.add(user)

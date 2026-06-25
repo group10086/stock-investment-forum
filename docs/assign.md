@@ -120,6 +120,10 @@
 | 邓文博 | 后端开发A | Bug修复①：HTTPException参数错误(`message`→`detail`) | 100% | 1h | FastAPI规范修正 |
 | 邓文博 | 后端开发A | Bug修复②：编码损坏修复(U+FFFD替换字符) | 100% | 2h | PowerShell批量替换导致8个服务文件中文字符损坏 |
 | 邓文博 | 后端开发A | Bug修复③：测试环境数据库连接异常处理 | 100% | 0.5h | main.py添加try-except，HTTPBearer设auto_error=False |
+| 邓文博 | 后端开发A | Bug修复④：SQLite开发环境(config/database) | 100% | 0.5h | 默认SQLite，避免无PG无法测试 |
+| 邓文博 | 后端开发A | Bug修复⑤：搜索suggest 422 + MainLayout.router缺失 | 100% | 1h | keyword可选，补充useRouter |
+| 邓文博 | 后端开发A | Bug修复⑥：Achievement.vue图标+wangeditor依赖 | 100% | 0.5h | Hot→TrendCharts，指定版本安装 |
+| 邓文博 | 后端开发A | Bug修复⑦：前端推荐关注/星标API/侧边栏导航 | 100% | 1h | 注释硬编码推荐，补充star API |
 | 蔡云飞 | 后端开发B | 后端辅助测试、接口联调验证 | 100% | 2h | --- |
 | 刘安邦 | 前端开发A | 前端集成测试、页面联调、前端构建验证 | 100% | 4h | Vite构建1666模块，0错误 |
 | 孟令腾 | 前端开发B | 前端组件测试、管理员页面联调 | 100% | 3h | 页面路由全部正常 |

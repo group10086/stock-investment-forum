@@ -66,7 +66,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { Trophy, Star, Medal, Collection, Hot } from '@element-plus/icons-vue'
+import { Trophy, Star, Medal, Collection, TrendCharts } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 
@@ -88,7 +88,7 @@ const achievements = ref([
   { id: 2, name: '发帖达人', description: '发布10篇帖子', icon: 'Star', unlocked: true },
   { id: 3, name: '精华作者', description: '获得10个精华帖', icon: 'Medal', unlocked: false },
   { id: 4, name: '社交达人', description: '关注50个用户', icon: 'Collection', unlocked: false },
-  { id: 5, name: '投资专家', description: '通过高级认证', icon: 'Hot', unlocked: false }
+  { id: 5, name: '投资专家', description: '通过高级认证', icon: 'TrendCharts', unlocked: false }
 ])
 
 const leaderboard = ref([

@@ -393,3 +393,56 @@ AI生成了以下测试文件：
 **发现的问题：**
 1. Vue Router 导航守卫 `next()` 回调已废弃的警告 — 不影响功能
 2. 帖子列表显示"暂无帖子"——因后端无 PostgreSQL 数据库，无数据
+
+---
+
+### 2026-06-26 邓文博（后端A）
+
+#### 任务⑤：前后端联调Bug修复
+
+**问题①：无PostgreSQL无法测试**
+后端默认配置PostgreSQL，本地无数据库导致所有API返回500。
+
+**修复：** `config.py` 默认改为SQLite，`database.py` 添加 `check_same_thread=False`
+
+---
+
+**问题②：MainLayout.vue router未定义**
+队友新增的导航菜单 `handleUserMenu` 使用了 `router` 变量但未导入 `useRouter`。
+
+**修复：** 添加 `import { useRouter }` 和 `const router = useRouter()`
+
+---
+
+**问题③：Achievement.vue图标不存在**
+`Hot` 图标在 `@element-plus/icons-vue` 中不存在，导致构建失败。
+
+**修复：** `Hot` → `TrendCharts`
+
+---
+
+**问题④：wangeditor依赖缺失 + npm代理冲突**
+队友新增富文本编辑器但依赖未安装，npm因VPN代理SSL证书报错。
+
+**修复：** `npm config set strict-ssl false`，安装 `@wangeditor/editor@5.1.23`
+
+---
+
+**问题⑤：搜索联想/suggest 422错误**
+搜索框自动补全请求空关键词触发 `min_length=1` 校验。
+
+**修复：** 后端 `keyword` 改为可选，前端返回空列表
+
+---
+
+**问题⑥：推荐关注硬编码 + 星标API缺失**
+右侧推荐用户ID(1,2,3)不存在于数据库，且星标API未注册到前端。
+
+**修复：** 注释推荐关注模块，前端api/index.js添加 `setSpecialFollow`/`unsetSpecialFollow`
+
+---
+
+**问题⑦：关注页面422错误**
+`GET /api/user/following?page=1&pageSize=20` 参数 `pageSize` 与后端 `page_size` 不匹配。
+
+**待修复：** 搜索suggest的422已修，关注页面422需进一步排查前端请求参数命名

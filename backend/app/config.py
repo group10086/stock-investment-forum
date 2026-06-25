@@ -5,10 +5,10 @@ from datetime import timedelta
 
 
 class Settings:
-    # 数据库配置
+    # 数据库配置（默认SQLite开发，生产用PostgreSQL）
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/stock_forum"
+        "sqlite:///./stock_forum.db"
     )
 
     # JWT配置

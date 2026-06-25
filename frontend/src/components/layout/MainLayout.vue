@@ -95,7 +95,7 @@
     <div class="main-container">
       <!-- 左侧边栏 -->
       <aside class="left-sidebar">
-        <el-menu :default-active="activeMenu" router>
+        <el-menu :default-active="activeMenu" router @select="handleMenuSelect">
           <el-menu-item index="/">
             <el-icon><HomeFilled /></el-icon>
             <span>首页/热榜</span>
@@ -104,19 +104,19 @@
             <el-icon><UserFilled /></el-icon>
             <span>关注动态</span>
           </el-menu-item>
-          <el-menu-item index="/">
+          <el-menu-item index="stocks">
             <el-icon><DataAnalysis /></el-icon>
             <span>自选股讨论</span>
           </el-menu-item>
-          <el-menu-item index="/">
+          <el-menu-item index="groups">
             <el-icon><ChatDotRound /></el-icon>
             <span>我的群组</span>
           </el-menu-item>
-          <el-menu-item index="/">
+          <el-menu-item index="bookmarks">
             <el-icon><StarFilled /></el-icon>
             <span>收藏夹</span>
           </el-menu-item>
-          <el-menu-item index="/">
+          <el-menu-item index="myposts">
             <el-icon><Document /></el-icon>
             <span>我的帖子</span>
           </el-menu-item>
@@ -163,22 +163,17 @@
           </div>
         </div>
 
-        <!-- 推荐用户 -->
+        <!-- 推荐用户（待后端推荐接口完成后启用） -->
+        <!--
         <div class="sidebar-card" v-if="userStore.isLoggedIn">
           <h3>推荐关注</h3>
           <div class="recommended-users">
             <div v-for="user in recommendedUsers" :key="user.id" class="user-item">
-              <el-avatar :size="32" :src="user.avatar">
-                {{ user.nickname?.charAt(0) }}
-              </el-avatar>
-              <div class="user-info">
-                <div class="user-name">{{ user.nickname }}</div>
-                <div class="user-desc">{{ user.bio }}</div>
-              </div>
-              <el-button size="small" type="primary" text>关注</el-button>
+              ...
             </div>
           </div>
         </div>
+        -->
       </aside>
     </div>
 
@@ -194,16 +189,19 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { Search, Bell, User, Document, Star, SwitchButton, 
   TrendCharts, HomeFilled, UserFilled, DataAnalysis, ChatDotRound, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { authApi } from '@/api'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 
 const searchKeyword = ref('')
+const showHotSearch = ref(false)
 const unreadCount = ref(3)
 
 const hotTopics = ref([
@@ -280,6 +278,26 @@ const handleUserMenu = (command) => {
       router.push('/')
       break
   }
+}
+
+const handleFollowRecommend = async (user) => {
+  try {
+    await authApi.followUser(user.id)
+    ElMessage.success(`已关注 ${user.nickname}`)
+  } catch (error) {
+    if (error.response?.status === 401) {
+      ElMessage.warning('请先登录后关注')
+    } else {
+      ElMessage.error(error.response?.data?.detail || '关注失败')
+    }
+  }
+}
+
+const handleMenuSelect = (index) => {
+  if (index === '/' || index === '/following') return
+  const userId = userStore.currentUser?.id
+  if (!userId) { ElMessage.warning('请先登录'); return }
+  ElMessage.info('功能开发中，敬请期待')
 }
 </script>
 

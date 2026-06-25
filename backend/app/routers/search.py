@@ -33,9 +33,10 @@ def search(
 
 @router.get("/suggest")
 def suggest(
-    keyword: str = Query(..., min_length=1, max_length=50),
+    keyword: str = Query("", max_length=50),
     db: Session = Depends(get_db)
 ):
     """搜索联想"""
-    result = SearchService.suggest(db, keyword)
+    if not keyword:
+        return {"data": {"posts": [], "users": []}}
     return {"data": result}

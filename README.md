@@ -59,7 +59,8 @@ stock-investment-forum/
 │   │   │   ├── post.py                # 帖子请求/响应Schema
 │   │   │   ├── comment.py             # 评论请求/响应Schema
 │   │   │   └── message.py             # 私信请求/响应Schema
-│   │   ├── routers/                   # 路由层（8个路由模块）
+│   │   ├── conftest.py                  # 测试配置（fixtures）
+│   ├── routers/                   # 路由层（8个路由模块）
 │   │   │   ├── auth.py                # 认证（注册/登录）
 │   │   │   ├── user.py                # 用户管理
 │   │   │   ├── post.py                # 帖子CRUD
@@ -135,28 +136,38 @@ stock-investment-forum/
 ## 功能模块
 
 ### 1️⃣ 用户系统
-- 用户注册/登录（bcrypt加密）
-- JWT Token 认证（7天有效期）
+- 多方式注册（邮箱/手机号）
+- 用户登录（bcrypt加密 + JWT Token 7天有效期）
+- 分级认证（基础认证/实名认证/专业认证加V）
+- 投资者适当性评估问卷
 - 个人资料查看/编辑（头像、昵称、简介、投资偏好）
 - 隐私设置（邮箱公开、允许私信）
-- 关注/取消关注、关注列表/粉丝列表（分页）
+- 关注/取消关注、粉丝列表（含星标关注、分页）
+- 积分与等级系统（发帖+5分，注册+10分，100分/级）
+- 成就系统（发帖/评论/获赞里程碑）
 
 ### 2️⃣ 内容系统
 - 帖子发布/编辑/删除（软删除）
+- 富文本编辑器（wangeditor，支持图片和格式）
 - 帖子列表多维度排序（最新/最热/精华/关注）
 - 分类筛选（A股/港股/美股/基金/技术分析/价值投资）
 - 评论系统（含楼中楼回复）
 - 点赞/取消点赞、收藏/取消收藏
+- 附件上传支持（PDF/Excel）
 
 ### 3️⃣ 社交与信息
 - 私信系统（未读计数、会话列表）
 - 群组创建/加入/退出
 - 全局搜索（帖子+用户）
+- 高级筛选（时间/热度/精华/市场维度）
+- 搜索联想（自动补全）
 
 ### 4️⃣ 管理运营
 - **敏感词过滤**：基于 DFA 算法的高效匹配
+- **重复内容检测**：基于内容相似度
 - **举报管理**：创建/审核/处理（删除/驳回）
 - **用户禁言**：带时效的禁言/自动解除
+- **数据分析**：DAU统计、活跃度、内容趋势
 
 ## 进度
 
@@ -183,10 +194,10 @@ stock-investment-forum/
 
 | 项目 | 结果 |
 |:----|:----:|
-| Vite 构建 | ✅ 成功（1666 modules，760ms） |
+| Vite 构建 | ✅ 成功（1677 modules，1.02s） |
 | 编译错误 | ✅ 0 个 |
-| 输出文件 | ✅ 30 个（15 JS + 15 CSS） |
-| 页面路由 | ✅ 全部正常（首页/登录/注册/帖子/用户/私信/404） |
+| 输出文件 | ✅ 40 个（20 JS + 20 CSS） |
+| 页面路由 | ✅ 全部正常（含新增的成就/认证/问卷/手机注册页） |
 
 ## 快速启动
 
@@ -207,11 +218,16 @@ python -m uvicorn app.main:app --reload --port 8000
 ```
 
 ### 前端启动
+
+> ⚠️ 如遇 npm 崩馈，尝试：`npm cache clean --force` 或 `npm install --legacy-peer-deps`
+> ⚠️ 如代理导致 SSL 错误：`npm config set strict-ssl false` 再安装，完成后改回 `true`
+
 ```bash
 cd frontend
-npm install        # Windows下如遇权限问题用 npm.cmd install
-npm run dev        # 启动开发服务器，默认 :5173
-npm run build      # 生产构建
+npm install                      # Windows用 npm.cmd install
+npm install @wangeditor/editor@5.1.23 @wangeditor/editor-for-vue@5.1.12 --legacy-peer-deps
+npm run dev                      # 启动开发服务器 :5173
+npm run build                    # 生产构建
 ```
 
 ### 验证访问
@@ -226,7 +242,6 @@ npm run build      # 生产构建
 
 - ⚡ 前端**无需后端**也可启动查看 UI 布局，未登录状态下可浏览首页、登录/注册页等
 - 🐘 后端无 PostgreSQL 时也能启动，API 路由正常注册，仅涉及数据库的操作会返回 500
-- 🔄 前后端联调时 Vite 开发服务器会自动将 `/api` 请求代理到后端 `:8000`
-
+- 🔄 前后端联调时 Vite 开发服务器会自动将 `/api` 请求代理到后端 `:8000`- 🖊️ 富文本编辑器需要单独安装 `@wangeditor`，详见前端启动说明
 ## 仓库地址
 https://github.com/group10086/stock-investment-forum.git

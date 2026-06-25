@@ -18,6 +18,9 @@ export const authApi = {
   unfollowUser: (id) => request.delete(`/user/${id}/follow`),
   // 获取我的关注列表
   getFollowingList: (params) => request.get('/user/following', { params }),
+  // 星标关注
+  setSpecialFollow: (id) => request.post(`/user/${id}/star`),
+  unsetSpecialFollow: (id) => request.delete(`/user/${id}/star`),
   // 获取我的粉丝列表
   getFollowersList: (params) => request.get('/user/followers', { params })
 }

@@ -114,6 +114,13 @@ const routes = [
     component: () => import('@/views/user/Achievement.vue'),
     meta: { title: '成就中心', requiresAuth: true }
   },
+  // 搜索
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('@/views/home/Search.vue'),
+    meta: { title: '搜索结果' }
+  },
   // 404
   {
     path: '/:pathMatch(.*)*',

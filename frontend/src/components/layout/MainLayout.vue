@@ -104,19 +104,19 @@
             <el-icon><UserFilled /></el-icon>
             <span>关注动态</span>
           </el-menu-item>
-          <el-menu-item index="stocks">
+          <el-menu-item index="/" @click="$router.push('/')">
             <el-icon><DataAnalysis /></el-icon>
             <span>自选股讨论</span>
           </el-menu-item>
-          <el-menu-item index="groups">
+          <el-menu-item index="/" @click="$router.push('/')">
             <el-icon><ChatDotRound /></el-icon>
             <span>我的群组</span>
           </el-menu-item>
-          <el-menu-item index="bookmarks">
+          <el-menu-item index="/" @click.stop="handleMenuSelect('bookmarks')">
             <el-icon><StarFilled /></el-icon>
             <span>收藏夹</span>
           </el-menu-item>
-          <el-menu-item index="myposts">
+          <el-menu-item index="/" @click.stop="handleMenuSelect('myposts')">
             <el-icon><Document /></el-icon>
             <span>我的帖子</span>
           </el-menu-item>
@@ -231,9 +231,9 @@ const activeMenu = computed(() => {
 })
 
 const handleSearch = () => {
-  if (!searchKeyword.value.trim()) return
-  ElMessage.info(`搜索: ${searchKeyword.value}`)
-  // TODO: 跳转到搜索结果页
+  const kw = searchKeyword.value.trim()
+  if (!kw) return
+  router.push(`/search?keyword=${encodeURIComponent(kw)}`)
 }
 
 // 搜索联想 - 防抖处理

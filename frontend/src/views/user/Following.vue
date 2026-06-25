@@ -98,7 +98,7 @@ const specialUsers = computed(() => {
 const loadFollowing = async () => {
   loading.value = true
   try {
-    const res = await authApi.getFollowingList({ page: page.value, pageSize: pageSize.value })
+    const res = await authApi.getFollowingList({ page: page.value, page_size: pageSize.value })
     userList.value = res.data.list || []
     total.value = res.data.total || 0
   } catch (error) {

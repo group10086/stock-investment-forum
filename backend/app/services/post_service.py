@@ -23,26 +23,39 @@ class PostService:
         sort: str = "newest",
         category: str = None,
         user_id: int = None,
-        current_user_id: int = None
+        current_user_id: int = None,
+        mine: int = None,
+        bookmarked: int = None
     ) -> dict:
         """获取帖子列表"""
         from app.utils.pagination import paginate
 
         query = db.query(Post).filter(Post.is_deleted == False)
 
-        # 筛选分类?
+        # 我的帖子
+        if mine and current_user_id:
+            query = query.filter(Post.user_id == current_user_id)
+
+        # 收藏的帖子
+        if bookmarked and current_user_id:
+            bookmark_sub = db.query(Bookmark.post_id).filter(
+                Bookmark.user_id == current_user_id
+            ).subquery()
+            query = query.filter(Post.id.in_(bookmark_sub))
+
+        # 筛选分类
         if category:
             query = query.filter(Post.category == category)
 
-        # 筛选用户?
-        if user_id:
+        # 筛选用户
+        if user_id and (not mine):
             query = query.filter(Post.user_id == user_id)
 
         # 排序
         if sort == "newest":
             query = query.order_by(Post.is_top.desc(), Post.created_at.desc())
         elif sort == "hot":
-            query = query.order_by(Post.is_top.desc(), Post.like_count.desc(), Post.view_count.desc())
+            query = query.order_by(Post.is_top.desc(), Post.like_count.desc(), Post.view_count.desc(), Post.created_at.desc())
         elif sort == "essence":
             query = query.filter(Post.is_essence == True).order_by(Post.created_at.desc())
         elif sort == "following":

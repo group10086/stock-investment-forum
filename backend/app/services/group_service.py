@@ -40,6 +40,36 @@ class GroupService:
         return {"list": group_list, "total": total, "has_more": has_more}
 
     @staticmethod
+    def get_my_groups(db: Session, user_id: int, page: int = 1, page_size: int = 20) -> dict:
+        """获取用户加入的群组"""
+        from app.utils.pagination import paginate
+
+        sub = db.query(GroupMember.group_id).filter(GroupMember.user_id == user_id).subquery()
+        query = db.query(Group).filter(Group.id.in_(sub)).order_by(Group.created_at.desc())
+        items, total, has_more = paginate(query, page, page_size)
+
+        group_list = []
+        for group in items:
+            owner = db.query(User).filter(User.id == group.owner_id).first()
+            member_count = db.query(GroupMember).filter(GroupMember.group_id == group.id).count()
+            group_list.append({
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "owner_id": group.owner_id,
+                "owner": {
+                    "id": owner.id if owner else None,
+                    "nickname": owner.nickname if owner else "已注销",
+                    "avatar": owner.avatar if owner else "",
+                },
+                "is_public": group.is_public,
+                "member_count": member_count,
+                "created_at": group.created_at.isoformat() if group.created_at else None,
+            })
+
+        return {"list": group_list, "total": total, "has_more": has_more}
+
+    @staticmethod
     def create_group(db: Session, user_id: int, name: str, description: str = "", is_public: bool = True) -> Group:
         """创建群组"""
         group = Group(

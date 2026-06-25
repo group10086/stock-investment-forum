@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 from app.routers import auth, user, post, comment, message, group, search, admin
+from app.models import group_message  # 注册群组消息模型
 
 # 创建数据库表（生产环境建议使用Alembic迁移）
 try:

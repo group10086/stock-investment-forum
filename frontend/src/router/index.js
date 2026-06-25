@@ -69,6 +69,41 @@ const routes = [
         name: 'Messages',
         component: () => import('@/views/messages/Index.vue'),
         meta: { title: '私信', requiresAuth: true }
+      },
+      // 收藏夹
+      {
+        path: 'bookmarks',
+        name: 'Bookmarks',
+        component: () => import('@/views/user/Bookmarks.vue'),
+        meta: { title: '收藏夹', requiresAuth: true }
+      },
+      // 我的帖子
+      {
+        path: 'my-posts',
+        name: 'MyPosts',
+        component: () => import('@/views/user/MyPosts.vue'),
+        meta: { title: '我的帖子', requiresAuth: true }
+      },
+      // 自选股讨论
+      {
+        path: 'stock-discuss',
+        name: 'StockDiscuss',
+        component: () => import('@/views/stock/Discuss.vue'),
+        meta: { title: '自选股讨论' }
+      },
+      // 我的群组
+      {
+        path: 'my-groups',
+        name: 'MyGroups',
+        component: () => import('@/views/group/MyGroups.vue'),
+        meta: { title: '我的群组', requiresAuth: true }
+      },
+      // 群组详情
+      {
+        path: 'group/:id',
+        name: 'GroupDetail',
+        component: () => import('@/views/group/Detail.vue'),
+        meta: { title: '群组详情', requiresAuth: true }
       }
     ]
   },
@@ -113,6 +148,13 @@ const routes = [
     name: 'Achievement',
     component: () => import('@/views/user/Achievement.vue'),
     meta: { title: '成就中心', requiresAuth: true }
+  },
+  // 搜索
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('@/views/home/Search.vue'),
+    meta: { title: '搜索结果' }
   },
   // 404
   {

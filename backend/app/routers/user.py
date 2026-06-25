@@ -1,6 +1,6 @@
 """用户路由 - 用户系统"""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -31,40 +31,6 @@ def update_user_info(
     """更新用户信息"""
     user = UserService.update_user_info(db, current_user.id, data)
     return {"message": "更新成功", "data": UserResponse.model_validate(user)}
-
-
-@router.get("/{user_id}")
-def get_user_detail(
-    user_id: int,
-    current_user: User = Depends(get_optional_user),
-    db: Session = Depends(get_db)
-):
-    """获取用户详情"""
-    current_user_id = current_user.id if current_user else None
-    result = UserService.get_user_detail(db, user_id, current_user_id)
-    return {"data": result}
-
-
-@router.post("/{user_id}/follow")
-def follow_user(
-    user_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """关注用户"""
-    UserService.follow_user(db, current_user.id, user_id)
-    return {"message": "关注成功"}
-
-
-@router.delete("/{user_id}/follow")
-def unfollow_user(
-    user_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """取消关注"""
-    UserService.unfollow_user(db, current_user.id, user_id)
-    return {"message": "已取消关注"}
 
 
 @router.get("/following")
@@ -129,6 +95,40 @@ def unstar_user(
     db.delete(sf)
     db.commit()
     return {"message": "已取消星标"}
+
+
+@router.get("/{user_id}")
+def get_user_detail(
+    user_id: int,
+    current_user: User = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """获取用户详情"""
+    current_user_id = current_user.id if current_user else None
+    result = UserService.get_user_detail(db, user_id, current_user_id)
+    return {"data": result}
+
+
+@router.post("/{user_id}/follow")
+def follow_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """关注用户"""
+    UserService.follow_user(db, current_user.id, user_id)
+    return {"message": "关注成功"}
+
+
+@router.delete("/{user_id}/follow")
+def unfollow_user(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """取消关注"""
+    UserService.unfollow_user(db, current_user.id, user_id)
+    return {"message": "已取消关注"}
 
 
 # ========== 成就系统 ==========

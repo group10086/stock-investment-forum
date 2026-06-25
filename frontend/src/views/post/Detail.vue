@@ -42,6 +42,76 @@
             />
           </div>
         </div>
+      <!-- 投票区域 -->
+        <div v-if="post.enable_vote" class="vote-section">
+          <h3 class="section-title">
+            <el-icon><TrendCharts /></el-icon>
+            投票：{{ post.vote_title || '市场观点' }}
+          </h3>
+          
+          <div v-if="!hasVoted" class="vote-options">
+            <el-radio-group v-model="selectedVoteOption" size="large">
+              <el-radio
+                v-for="(option, index) in post.vote_options"
+                :key="index"
+                :label="index"
+                border
+              >
+                {{ option }}
+              </el-radio>
+            </el-radio-group>
+            <el-button type="primary" @click="submitVote" style="margin-top: 16px;">
+              提交投票
+            </el-button>
+          </div>
+
+          <div v-else class="vote-results">
+            <div v-for="(option, index) in post.vote_options" :key="index" class="vote-result-item">
+              <div class="vote-option-label">{{ option }}</div>
+              <el-progress
+                :percentage="calculatePercentage(option.votes, totalVotes)"
+                :status="getProgressStatus(calculatePercentage(option.votes, totalVotes))"
+                :stroke-width="20"
+              />
+              <div class="vote-count">{{ option.votes }} 票 ({{ calculatePercentage(option.votes, totalVotes) }}%)</div>
+            </div>
+            <div class="vote-total">总票数：{{ totalVotes }}</div>
+          </div>
+
+          <div v-if="post.is_anonymous" class="vote-hint">
+            <el-tag type="info" size="small">匿名投票</el-tag>
+          </div>
+        </div>
+
+        <!-- 附件区域 -->
+        <div v-if="post.attachments?.length" class="attachment-section">
+          <h3 class="section-title">
+            <el-icon><Document /></el-icon>
+            附件下载
+          </h3>
+          <div class="attachment-list">
+            <el-card
+              v-for="(file, index) in post.attachments"
+              :key="index"
+              shadow="hover"
+              class="attachment-item"
+            >
+              <div class="attachment-info">
+                <el-icon :size="24" color="#409EFF">
+                  <component :is="getFileIcon(file.type)" />
+                </el-icon>
+                <div class="attachment-details">
+                  <div class="attachment-name">{{ file.name }}</div>
+                  <div class="attachment-meta">{{ formatFileSize(file.size) }} · {{ file.type.toUpperCase() }}</div>
+                </div>
+              </div>
+              <el-button type="primary" size="small" @click="downloadAttachment(file)">
+                <el-icon><Download /></el-icon>
+                下载
+              </el-button>
+            </el-card>
+          </div>
+        </div>
 
         <!-- 操作栏 -->
         <div class="action-bar">
@@ -125,6 +195,7 @@ import { useUserStore } from '@/stores/user'
 import { postApi, commentApi } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, Delete, Star, StarFilled, Share, WarnTriangleFilled } from '@element-plus/icons-vue'
+import { TrendCharts, Document, Download, Files, Reading, Picture } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -134,6 +205,10 @@ const loading = ref(false)
 const post = ref(null)
 const commentList = ref([])
 const commentContent = ref('')
+const selectedVoteOption = ref(null)
+const hasVoted = ref(false)
+const totalVotes = ref(0)
+
 
 const formatTime = (time) => {
   if (!time) return ''
@@ -253,6 +328,66 @@ const handleDelete = async () => {
     }
   }
 }
+const submitVote = async () => {
+  if (selectedVoteOption.value === null) {
+    ElMessage.warning('请选择一个选项')
+    return
+  }
+  
+  try {
+    await postApi.submitVote(post.value.id, {
+      option_index: selectedVoteOption.value
+    })
+    ElMessage.success('投票成功！')
+    hasVoted.value = true
+    loadPost()
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || '投票失败')
+  }
+}
+
+const calculatePercentage = (votes, total) => {
+  if (total === 0) return 0
+  return Math.round((votes / total) * 100)
+}
+
+const getProgressStatus = (percentage) => {
+  if (percentage >= 50) return 'success'
+  if (percentage >= 30) return 'warning'
+  return 'exception'
+}
+
+const getFileIcon = (type) => {
+  const iconMap = {
+    pdf: 'Reading',
+    xlsx: 'Files',
+    xls: 'Files',
+    doc: 'Reading',
+    docx: 'Reading',
+    default: 'Document'
+  }
+  return iconMap[type?.toLowerCase()] || iconMap.default
+}
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+}
+
+const downloadAttachment = (file) => {
+  if (file.url) {
+    const link = document.createElement('a')
+    link.href = file.url
+    link.download = file.name
+    link.click()
+    ElMessage.success('开始下载...')
+  } else {
+    ElMessage.warning('文件链接无效')
+  }
+}
 
 onMounted(() => {
   loadPost()
@@ -322,6 +457,91 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
   margin-top: 20px;
+}
+.vote-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: #F5F7FA;
+  border-radius: 8px;
+}
+
+.vote-options {
+  margin-top: 16px;
+}
+
+.vote-results {
+  margin-top: 16px;
+}
+
+.vote-result-item {
+  margin-bottom: 16px;
+}
+
+.vote-option-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.vote-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.vote-total {
+  text-align: right;
+  font-size: 14px;
+  color: var(--text-regular);
+  margin-top: 12px;
+}
+
+.vote-hint {
+  margin-top: 12px;
+}
+
+.attachment-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: #F5F7FA;
+  border-radius: 8px;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.attachment-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.attachment-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.attachment-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .action-bar {

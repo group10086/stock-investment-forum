@@ -1,0 +1,1 @@
+<template><div style="background:#fff;padding:20px;"><h2>🔒 敏感词管理（待完善）</h2></div></template>

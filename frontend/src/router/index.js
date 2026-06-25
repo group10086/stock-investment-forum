@@ -86,6 +86,34 @@ const routes = [
     component: () => import('@/views/auth/Register.vue'),
     meta: { title: '注册' }
   },
+  // 手机号注册
+  {
+    path: '/register-phone',
+    name: 'RegisterPhone',
+    component: () => import('@/views/auth/RegisterPhone.vue'),
+    meta: { title: '手机号注册' }
+  },
+  // 分级认证
+  {
+    path: '/authentication',
+    name: 'Authentication',
+    component: () => import('@/views/auth/Authentication.vue'),
+    meta: { title: '身份认证', requiresAuth: true }
+  },
+  // 投资者适当性问卷
+  {
+    path: '/questionnaire',
+    name: 'Questionnaire',
+    component: () => import('@/views/auth/Questionnaire.vue'),
+    meta: { title: '风险评估问卷', requiresAuth: true }
+  },
+  // 成就系统
+  {
+    path: '/achievement',
+    name: 'Achievement',
+    component: () => import('@/views/user/Achievement.vue'),
+    meta: { title: '成就中心', requiresAuth: true }
+  },
   // 404
   {
     path: '/:pathMatch(.*)*',
@@ -114,11 +142,10 @@ router.beforeEach((to, from, next) => {
   }
 
   // 已登录用户访问登录/注册页，重定向到首页
-  if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
+  if ((to.name === 'Login' || to.name === 'Register' || to.name === 'RegisterPhone') && userStore.isLoggedIn) {
     next({ name: 'Home' })
     return
   }
-
   next()
 })
 

@@ -117,35 +117,45 @@ const formatTime = (time) => {
   return date.toLocaleDateString()
 }
 
-const loadPosts = async (reset = false) => {
+const loadPosts = async (reset = false, sortOverride = null) => {
   if (reset) {
     page.value = 1
     postList.value = []
-  }
-  
-  const params = {
-    page: page.value,
-    pageSize: pageSize.value,
-    sort: activeTab.value === 'latest' ? 'newest' :
-          activeTab.value === 'hot' ? 'hot' :
-          activeTab.value === 'essence' ? 'essence' : 'following'
+    hasMore.value = true
   }
 
+  loading.value = true
+  
+  const sort = sortOverride || (
+    activeTab.value === 'latest' ? 'newest' :
+    activeTab.value === 'hot' ? 'hot' :
+    activeTab.value === 'essence' ? 'essence' : 'following'
+  )
+
   try {
-    const res = await postApi.getPostList(params)
+    const res = await postApi.getPostList({
+      page: page.value,
+      pageSize: pageSize.value,
+      sort
+    })
+    const list = res.data?.list || []
     if (reset) {
-      postList.value = res.data.list
+      postList.value = list
     } else {
-      postList.value = [...postList.value, ...res.data.list]
+      postList.value = [...postList.value, ...list]
     }
-    hasMore.value = res.data.hasMore
+    hasMore.value = res.data?.hasMore || false
   } catch (error) {
     ElMessage.error('加载帖子失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const handleTabChange = () => {
-  loadPosts(true)
+const handleTabChange = (tab) => {
+  // 用 tab.paneName 确保拿到最新值
+  const sortMap = { latest: 'newest', hot: 'hot', essence: 'essence', following: 'following' }
+  loadPosts(true, sortMap[tab.paneName] || 'newest')
 }
 
 const loadMore = () => {

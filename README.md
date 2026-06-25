@@ -201,47 +201,78 @@ stock-investment-forum/
 
 ## 快速启动
 
-### 后端启动
+### 环境要求
+- Python 3.9+
+- Node.js 18+
+- （可选）PostgreSQL（默认使用 SQLite）
+
+### 1. 后端启动
 ```bash
 cd backend
+
+# 安装依赖
 pip install -r requirements.txt
 
-# 方式一：完整模式（需要 PostgreSQL）
-# 1. 安装并启动 PostgreSQL
-# 2. 执行 sql/init.sql 建表
-# 3. （可选）执行 sql/sample_data.sql 导入测试数据
-# 4. 修改 app/config.py 中的 DATABASE_URL
+# 直接启动（默认 SQLite，自动建表）
 python -m uvicorn app.main:app --reload --port 8000
 
-# 方式二：无数据库模式（API正常注册，但接口调用返回500）
-python -m uvicorn app.main:app --reload --port 8000
+# 初始化演示数据（首次运行）
+python seed_data.py
 ```
 
-### 前端启动
-
-> ⚠️ 如遇 npm 崩馈，尝试：`npm cache clean --force` 或 `npm install --legacy-peer-deps`
-> ⚠️ 如代理导致 SSL 错误：`npm config set strict-ssl false` 再安装，完成后改回 `true`
-
+### 2. 前端启动
 ```bash
 cd frontend
-npm install                      # Windows用 npm.cmd install
-npm install @wangeditor/editor@5.1.23 @wangeditor/editor-for-vue@5.1.12 --legacy-peer-deps
-npm run dev                      # 启动开发服务器 :5173
-npm run build                    # 生产构建
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
 ```
 
-### 验证访问
+### 3. 运行测试
+```bash
+cd backend
 
-| 地址 | 说明 |
-|:----|:------|
-| **http://localhost:5173** | 前端页面（自动代理 API 到 :8000） |
-| **http://localhost:8000/api/docs** | Swagger API 文档 |
-| **http://localhost:8000/api/health** | 后端健康检查 |
+# 运行全部测试（33个用例）
+pytest app/tests/ -v
 
-### 注意事项
+# 运行单个模块
+pytest app/tests/test_auth.py -v
+pytest app/tests/test_post.py -v
+pytest app/tests/test_comment.py -v
+pytest app/tests/test_admin.py -v
+```
 
-- ⚡ 前端**无需后端**也可启动查看 UI 布局，未登录状态下可浏览首页、登录/注册页等
-- 🐘 后端无 PostgreSQL 时也能启动，API 路由正常注册，仅涉及数据库的操作会返回 500
-- 🔄 前后端联调时 Vite 开发服务器会自动将 `/api` 请求代理到后端 `:8000`- 🖊️ 富文本编辑器需要单独安装 `@wangeditor`，详见前端启动说明
+### 4. 访问地址
+| 服务 | 地址 |
+|------|------|
+| 前端页面 | http://localhost:5173 |
+| 后端 API | http://localhost:8000 |
+| API 文档（Swagger） | http://localhost:8000/api/docs |
+| API 文档（ReDoc） | http://localhost:8000/api/redoc |
+
+### 5. 演示账号
+| 用户名 | 密码 | 备注 |
+|--------|------|------|
+| dubo2248 | （已注册） | 当前用户 |
+| trader_wang | 123456 | 投资达人 |
+| quant_li | 123456 | 量化分析师 |
+| fund_zhang | 123456 | 基金小张 |
+| tech_chen | 123456 | 科技股研究员 |
+| newbie_liu | 123456 | 韭菜小白 |
+
+### 6. 切换数据库
+```bash
+# 默认 SQLite（无需配置）
+# 切换到 PostgreSQL：
+# 1. 安装 PostgreSQL 并创建数据库
+# 2. 设置环境变量
+set DATABASE_URL=postgresql://user:password@localhost:5432/stock_forum
+# 3. 执行 sql/init.sql 建表
+# 4. 重启后端
+```
+
 ## 仓库地址
 https://github.com/group10086/stock-investment-forum.git

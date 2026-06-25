@@ -104,19 +104,19 @@
             <el-icon><UserFilled /></el-icon>
             <span>关注动态</span>
           </el-menu-item>
-          <el-menu-item index="/" @click="$router.push('/')">
+          <el-menu-item index="/stock-discuss">
             <el-icon><DataAnalysis /></el-icon>
             <span>自选股讨论</span>
           </el-menu-item>
-          <el-menu-item index="/" @click="$router.push('/')">
+          <el-menu-item index="/my-groups" v-if="userStore.isLoggedIn">
             <el-icon><ChatDotRound /></el-icon>
             <span>我的群组</span>
           </el-menu-item>
-          <el-menu-item index="/" @click.stop="handleMenuSelect('bookmarks')">
+          <el-menu-item index="/bookmarks" v-if="userStore.isLoggedIn">
             <el-icon><StarFilled /></el-icon>
             <span>收藏夹</span>
           </el-menu-item>
-          <el-menu-item index="/" @click.stop="handleMenuSelect('myposts')">
+          <el-menu-item index="/my-posts" v-if="userStore.isLoggedIn">
             <el-icon><Document /></el-icon>
             <span>我的帖子</span>
           </el-menu-item>
@@ -188,13 +188,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { Search, Bell, User, Document, Star, SwitchButton, 
   TrendCharts, HomeFilled, UserFilled, DataAnalysis, ChatDotRound, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { authApi } from '@/api'
+import { authApi, messageApi } from '@/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -202,7 +202,31 @@ const userStore = useUserStore()
 
 const searchKeyword = ref('')
 const showHotSearch = ref(false)
-const unreadCount = ref(3)
+const unreadCount = ref(0)
+
+// 获取未读消息数
+const fetchUnreadCount = async () => {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await messageApi.getUnreadCount()
+    unreadCount.value = res.data.count || 0
+  } catch {
+    // 静默失败
+  }
+}
+
+// 路由变化时刷新未读数
+watch(() => route.path, (path) => {
+  if (path.startsWith('/messages')) {
+    setTimeout(fetchUnreadCount, 500) // 等消息标记已读后再刷新
+  } else {
+    fetchUnreadCount()
+  }
+})
+
+onMounted(() => {
+  fetchUnreadCount()
+})
 
 const hotTopics = ref([
   'A股', '港股', '美股', '基金定投', '价值投资', '技术分析', '财报分析'
@@ -227,6 +251,10 @@ const recommendedUsers = ref([
 
 const activeMenu = computed(() => {
   if (route.path.startsWith('/following')) return '/following'
+  if (route.path.startsWith('/stock-discuss')) return '/stock-discuss'
+  if (route.path.startsWith('/my-groups')) return '/my-groups'
+  if (route.path.startsWith('/bookmarks')) return '/bookmarks'
+  if (route.path.startsWith('/my-posts')) return '/my-posts'
   return '/'
 })
 
@@ -294,9 +322,8 @@ const handleFollowRecommend = async (user) => {
 }
 
 const handleMenuSelect = (index) => {
-  if (index === '/' || index === '/following') return
-  const userId = userStore.currentUser?.id
-  if (!userId) { ElMessage.warning('请先登录'); return }
+  if (index === '/' || index === '/following' || index === '/bookmarks' || index === '/my-posts'
+    || index === '/stock-discuss' || index === '/my-groups') return
   ElMessage.info('功能开发中，敬请期待')
 }
 </script>

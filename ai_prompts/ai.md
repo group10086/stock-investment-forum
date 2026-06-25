@@ -446,3 +446,67 @@ AI生成了以下测试文件：
 `GET /api/user/following?page=1&pageSize=20` 参数 `pageSize` 与后端 `page_size` 不匹配。
 
 **待修复：** 搜索suggest的422已修，关注页面422需进一步排查前端请求参数命名
+
+---
+
+## 模块4：AI辅助集成调试（2026.6.26）
+
+### 2026-06-26 邓文博（后端A）
+
+#### 任务：前后端联调修复 + 缺失功能补全
+
+**原始提示词：**
+> 修复前端测试中遇到的422/404/500错误，补全缺失的页面和功能
+
+**AI辅助修复的问题：**
+
+**① 路由顺序导致 422（关键修复）**
+`/api/user/following` 被 `/{user_id}` 路由拦截，因为 `/{user_id}` 在 `/following` 前面定义。FastAPI 按定义顺序匹配路由。
+
+**修复：** 将具体路径（`/following`、`/followers`、`/unread-count`、`/conversations`）移到 `/{user_id}` 之前。
+
+**② POST /api/messages 422**
+前端发送 `receiver_id`（snake_case），Pydantic schema 的 `validation_alias="receiverId"` 只接受 camelCase。
+
+**修复：** 去掉 `validation_alias`，直接使用字段名 `receiver_id`。
+
+**③ SQLite 不支持 `least`/`greatest` 函数导致 500**
+`get_conversations` 使用 `func.least()` 在 SQLite 中报 `no such function`。
+
+**修复：** 重写为 Python 内存去重，按 `other_user_id` 分组取最新消息。
+
+**④ 缺页补全**
+- 收藏夹（`/bookmarks`）：调用 `GET /api/posts?bookmarked=1`
+- 我的帖子（`/my-posts`）：调用 `GET /api/posts?mine=1`
+- 自选股讨论（`/stock-discuss`）：股票行情条 + 股票分类帖子
+- 我的群组（`/my-groups`）：`GET /api/groups?my=true`
+- 群组详情（`/group/:id`）：成员列表 + 群聊功能
+- 群聊消息：`POST/GET /api/groups/{id}/messages`
+
+**⑤ 种子数据**
+创建 `seed_data.py`，初始化 5 个演示用户、5 篇帖子、7 条评论、私信、关注关系、4 个群组。
+
+**⑥ 星标状态缺失**
+`get_following` 未返回 `isSpecial` 字段。
+
+**修复：** 在返回数据中查询 `StarFollow` 表填充 `isSpecial`。
+
+**⑦ 最热排序不稳定**
+种子帖子点赞数相同导致排序随机。
+
+**修复：** 设置不同点赞数（42/38/30/25/15），添加 `created_at` 兜底排序。
+
+**⑧ 精华标签页无数据**
+无帖子标记为精华。
+
+**修复：** 将 3 篇帖子标记为 `is_essence=True`。
+
+**⑨ Tab 切换竞态**
+`handleTabChange` 依赖 `activeTab` 响应式值，可能在更新前执行。
+
+**修复：** 使用事件参数 `tab.paneName`，添加 `sortOverride` 参数。
+
+**⑩ 群组发消息 500**
+`send_group_message` 中 `GroupMember` 未导入。
+
+**修复：** 在 `group.py` 添加 `from app.models.group import Group, GroupMember`。

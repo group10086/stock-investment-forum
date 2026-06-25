@@ -21,13 +21,16 @@ def get_post_list(
     sort: str = Query("newest", pattern="^(newest|hot|essence|following)$"),
     category: str = Query(None),
     user_id: int = Query(None),
+    mine: int = Query(None),
+    bookmarked: int = Query(None),
     current_user: User = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """获取帖子列表"""
     current_user_id = current_user.id if current_user else None
     result = PostService.get_post_list(
-        db, page, page_size, sort, category, user_id, current_user_id
+        db, page, page_size, sort, category, user_id, current_user_id,
+        mine=mine, bookmarked=bookmarked
     )
     return {"data": result}
 

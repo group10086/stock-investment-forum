@@ -66,7 +66,9 @@ export const messageApi = {
   // 发送私信
   sendMessage: (data) => request.post('/messages', data),
   // 获取未读消息数量
-  getUnreadCount: () => request.get('/messages/unread-count')
+  getUnreadCount: () => request.get('/messages/unread-count'),
+  // 获取会话列表
+  getConversations: () => request.get('/messages/conversations')
 }
 
 // 群组相关接口
@@ -80,7 +82,11 @@ export const groupApi = {
   // 加入群组
   joinGroup: (id) => request.post(`/groups/${id}/join`),
   // 退出群组
-  leaveGroup: (id) => request.delete(`/groups/${id}/leave`)
+  leaveGroup: (id) => request.delete(`/groups/${id}/leave`),
+  // 获取群组消息
+  getGroupMessages: (id, params) => request.get(`/groups/${id}/messages`, { params }),
+  // 发送群组消息
+  sendGroupMessage: (id, data) => request.post(`/groups/${id}/messages`, data)
 }
 
 // 搜索接口

@@ -120,6 +120,7 @@ class UserService:
     def get_following(db: Session, user_id: int, page: int = 1, page_size: int = 20) -> dict:
         """获取关注列表"""
         from app.utils.pagination import paginate
+        from app.models.star_follow import StarFollow
 
         query = db.query(Follow, User).join(
             User, Follow.followed_id == User.id
@@ -129,6 +130,13 @@ class UserService:
 
         items, total, has_more = paginate(query, page, page_size)
 
+        # 获取星标用户ID集合
+        starred_ids = set(
+            row[0] for row in db.query(StarFollow.starred_user_id).filter(
+                StarFollow.user_id == user_id
+            ).all()
+        )
+
         following_list = []
         for follow, user in items:
             following_list.append({
@@ -137,6 +145,7 @@ class UserService:
                 "avatar": user.avatar,
                 "bio": user.bio,
                 "is_following": True,
+                "isSpecial": user.id in starred_ids,
             })
 
         return {"list": following_list, "total": total, "has_more": has_more}

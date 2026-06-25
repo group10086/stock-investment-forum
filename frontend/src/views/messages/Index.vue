@@ -90,17 +90,28 @@ import { ElMessage } from 'element-plus'
 const route = useRoute()
 const userStore = useUserStore()
 
-const conversations = ref([
-  // 模拟数据，待API接入
-  { user: { id: 1, nickname: '投资达人', avatar: '' }, lastMessage: '你好！', unread: 2 },
-  { user: { id: 2, nickname: '量化分析师', avatar: '' }, lastMessage: '今天行情不错', unread: 0 }
-])
+const conversations = ref([])
 
 const currentUserId = ref(route.params.userId || null)
 const chatUser = ref(null)
 const messages = ref([])
 const messageContent = ref('')
 const messageListRef = ref(null)
+
+// 加载会话列表
+const loadConversations = async () => {
+  try {
+    const res = await messageApi.getConversations()
+    conversations.value = (res.data || []).map(conv => ({
+      user: conv.user,
+      lastMessage: conv.last_message,
+      lastTime: conv.last_time,
+      unread: conv.unread_count
+    }))
+  } catch (error) {
+    console.error('加载会话失败', error)
+  }
+}
 
 const selectUser = (user) => {
   currentUserId.value = user.id
@@ -112,7 +123,11 @@ const loadMessages = async () => {
   if (!currentUserId.value) return
   try {
     const res = await messageApi.getMessageList(currentUserId.value, { page: 1, pageSize: 50 })
-    messages.value = res.data.list || []
+    messages.value = (res.data.list || []).map(msg => ({
+      ...msg,
+      isMine: msg.is_mine,
+      created_at: msg.created_at
+    }))
     scrollToBottom()
   } catch (error) {
     console.error('加载消息失败', error)
@@ -136,8 +151,10 @@ const sendMessage = async () => {
     })
     messageContent.value = ''
     scrollToBottom()
+    loadConversations() // 刷新会话列表
   } catch (error) {
-    ElMessage.error('发送失败')
+    const msg = error?.response?.data?.detail || '发送失败'
+    ElMessage.error(msg)
   }
 }
 
@@ -167,9 +184,9 @@ const formatTime = (time) => {
   return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadConversations()
   if (route.params.userId) {
-    // 找到对应的联系人
     const conv = conversations.value.find(c => c.user.id == route.params.userId)
     if (conv) selectUser(conv.user)
   }

@@ -92,32 +92,29 @@ class MessageService:
     @staticmethod
     def get_conversations(db: Session, user_id: int) -> list:
         """获取会话列表"""
-        # 找出所有有消息交流的用户?
-        from sqlalchemy import func, text
+        from sqlalchemy import func
 
-        subquery = db.query(
-            func.max(Message.id).label("max_id")
-        ).filter(
+        # 获取所有与当前用户相关的消息，按时间倒序
+        all_msgs = db.query(Message).filter(
             or_(Message.sender_id == user_id, Message.receiver_id == user_id)
-        ).group_by(
-            func.least(Message.sender_id, Message.receiver_id),
-            func.greatest(Message.sender_id, Message.receiver_id)
-        ).subquery()
-
-        latest_messages = db.query(Message).filter(
-            Message.id.in_(db.query(subquery.c.max_id))
         ).order_by(Message.created_at.desc()).all()
 
+        # 按对话对方去重，保留最新消息
+        seen = set()
         conversations = []
-        for msg in latest_messages:
-            other_user_id = msg.receiver_id if msg.sender_id == user_id else msg.sender_id
-            other_user = db.query(User).filter(User.id == other_user_id).first()
+        for msg in all_msgs:
+            other_id = msg.receiver_id if msg.sender_id == user_id else msg.sender_id
+            if other_id in seen:
+                continue
+            seen.add(other_id)
+
+            other_user = db.query(User).filter(User.id == other_id).first()
             if not other_user:
                 continue
 
             unread = db.query(Message).filter(
                 Message.receiver_id == user_id,
-                Message.sender_id == other_user_id,
+                Message.sender_id == other_id,
                 Message.is_read == False
             ).count()
 

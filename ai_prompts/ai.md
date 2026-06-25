@@ -394,55 +394,27 @@ AI生成了以下测试文件：
 1. Vue Router 导航守卫 `next()` 回调已废弃的警告 — 不影响功能
 2. 帖子列表显示"暂无帖子"——因后端无 PostgreSQL 数据库，无数据
 
----
 
-### 2026-06-26 邓文博（后端A）
 
-#### 任务⑤：前后端联调Bug修复
+### 2026-06-15 孟令腾（前端B）
 
-**问题①：无PostgreSQL无法测试**
-后端默认配置PostgreSQL，本地无数据库导致所有API返回500。
+## 任务5：前端组件与管理员页面
 
-**修复：** `config.py` 默认改为SQLite，`database.py` 添加 `check_same_thread=False`
+### 交互记录 1：抽离帖子卡片组件（PostCard.vue）
+- **原始提示词**：作为前端开发，请帮我将帖子列表项抽离成一个独立的 Vue3 组件 PostCard.vue，要求包含作者头像、姓名、发布时间、标题、摘要、点赞数、评论数、收藏数，点击整张卡片跳转到帖子详情。
+- **AI输出摘要**：AI 生成了完整的单文件组件，使用了 `<script setup>` 语法，包含 `defineProps` 接收 post 对象，并集成了 Vue Router 的跳转逻辑。
+- **可能存在的问题**：AI 生成的样式使用了 `scoped`，但部分颜色变量与项目原有UI库不完全匹配，需要手动调整主题色。
+- **迭代优化**：人工删除了 AI 生成的冗余图标库引用，改用项目现有的图标组件。
 
----
+### 交互记录 2：生成评论树组件（CommentTree.vue）
+- **原始提示词**：请生成一个支持"楼中楼"递归嵌套的评论组件 CommentTree.vue，传入 comments 数组，每个 comment 包含 children 属性，点击"回复"按钮可触发回复事件。
+- **AI输出摘要**：生成了递归组件结构，并在模板中使用了 `v-for` 配合 `v-if` 控制缩进层级，同时包含了时间格式化（dayjs）的逻辑。
+- **可能存在的问题**：AI 最初生成的回复输入框位置不对，导致在深层嵌套中点击"回复"，输入框会出现在所有评论的底部。
+- **迭代优化**：人工调整了 `replyTarget` 状态的位置，将输入框移到了当前评论节点的正下方。
 
-**问题②：MainLayout.vue router未定义**
-队友新增的导航菜单 `handleUserMenu` 使用了 `router` 变量但未导入 `useRouter`。
-
-**修复：** 添加 `import { useRouter }` 和 `const router = useRouter()`
-
----
-
-**问题③：Achievement.vue图标不存在**
-`Hot` 图标在 `@element-plus/icons-vue` 中不存在，导致构建失败。
-
-**修复：** `Hot` → `TrendCharts`
-
----
-
-**问题④：wangeditor依赖缺失 + npm代理冲突**
-队友新增富文本编辑器但依赖未安装，npm因VPN代理SSL证书报错。
-
-**修复：** `npm config set strict-ssl false`，安装 `@wangeditor/editor@5.1.23`
-
----
-
-**问题⑤：搜索联想/suggest 422错误**
-搜索框自动补全请求空关键词触发 `min_length=1` 校验。
-
-**修复：** 后端 `keyword` 改为可选，前端返回空列表
-
----
-
-**问题⑥：推荐关注硬编码 + 星标API缺失**
-右侧推荐用户ID(1,2,3)不存在于数据库，且星标API未注册到前端。
-
-**修复：** 注释推荐关注模块，前端api/index.js添加 `setSpecialFollow`/`unsetSpecialFollow`
-
----
-
-**问题⑦：关注页面422错误**
-`GET /api/user/following?page=1&pageSize=20` 参数 `pageSize` 与后端 `page_size` 不匹配。
-
-**待修复：** 搜索suggest的422已修，关注页面422需进一步排查前端请求参数命名
+### 交互记录 3：实现管理员后台布局与举报管理页面
+- **原始提示词**：请生成一个后台管理页面框架 AdminLayout.vue，包含左侧菜单（仪表盘、举报管理、用户管理、敏感词管理），并在右侧提供 router-view 出口。同时实现 Reports.vue 页面，包含举报列表表格（ID、举报人、原因、状态）以及"通过/驳回"操作按钮，对接 /admin/reports 接口。
+- **AI输出摘要**：AI 生成了基于 Flex 布局的侧边栏，以及包含表格和分页逻辑的举报管理页面，并生成了对应的 `admin.js` API 请求文件。
+- **可能存在的问题**：AI 生成的 API 文件直接使用了 `axios` 实例，未适配项目现有的 `request` 拦截器，导致 Token 未携带。
+- **迭代优化**：将 `import axios` 修改为 `import api from '@/api/request'`，并调整了接口路径，使其符合后端 RESTful 规范。
+- **其他说明**：在复制 `layout` 文件夹时，不小心覆盖了团队的 `MainLayout.vue` 文件，通过执行 `git checkout` 命令恢复了原版本。
